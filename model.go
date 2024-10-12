@@ -12,7 +12,8 @@ type XsdElement interface {
 type XSD struct {
 	XMLName      xml.Name       `xml:"schema"`
 	Import       *Import        `xml:"import,omitempty"`
-	ComplexTypes []*ComplexType `xml:"complexType"`
+	SimpleTypes  []*SimpleType  `xml:"simpleType,omitempty"`
+	ComplexTypes []*ComplexType `xml:"complexType,omitempty"`
 }
 
 type Import struct {
@@ -24,7 +25,38 @@ type ComplexType struct {
 	Name           string          `xml:"name,attr"`
 	Sequence       *Sequence       `xml:"sequence,omitempty"`
 	ComplexContent *ComplexContent `xml:"complexContent,omitempty"`
+	SimpleContent  *SimpleContent  `xml:"simpleContent,omitempty"`
 	Choice         *Choice         `xml:"choice,omitempty"`
+}
+
+type SimpleType struct {
+	Name        string       `xml:"name,attr"`
+	Restriction *Restriction `xml:"restriction,omitempty"`
+}
+
+type Enumeration struct {
+	Value string `xml:"value,attr"`
+}
+
+type Restriction struct {
+	Base         string         `xml:"base,attr"`
+	Enumerations []*Enumeration `xml:"enumeration,omitempty"`
+	MinInclusive *MinInclusive `xml:"minInclusive,omitempty"`
+	MaxInclusive *MaxInclusive `xml:"maxInclusive,omitempty"`
+	Pattern *Pattern `xml:"pattern,omitempty"`
+}
+
+type MinInclusive struct {
+	Value string `xml:"value,attr"`
+}
+
+type MaxInclusive struct {
+	Value string `xml:"value,attr"`
+}
+
+
+type Pattern struct {
+	Value string `xml:"value,attr"`
 }
 
 type Sequence struct {
@@ -41,6 +73,7 @@ type Element struct {
 	MinOccurs   string       `xml:"minOccurs,attr"`
 	MaxOccurs   string       `xml:"maxOccurs,attr"`
 	ComplexType *ComplexType `xml:"complexType,omitempty"`
+	SimpleType  *SimpleType  `xml:"simpleType,omitempty"`
 	Annotation  *Annotation  `xml:"annotation,omitempty"`
 }
 
@@ -56,13 +89,25 @@ type Choice struct {
 	Sequence  *Sequence  `xml:"sequence,omitempty"`
 }
 
+type SimpleContent struct {
+	Extension *Extension `xml:"extension,omitempty"`
+}
+
 type ComplexContent struct {
 	Extension *Extension `xml:"extension,omitempty"`
 }
 
+// This
 type Extension struct {
+	ID     string    `xml:"id,attr"`
 	Base     string    `xml:"base,attr"`
 	Sequence *Sequence `xml:"sequence,omitempty"`
+	Attributes []*Attribute `xml:"attribute,omitempty"`
+}
+
+type Attribute struct {
+	Name      string     `xml:"name,attr"`
+
 }
 
 func (xsd *XSD) ToString() string {
@@ -75,6 +120,12 @@ func (i *Import) ToString() string {
 
 func (ct *ComplexType) ToString() string {
 	return fmt.Sprintf("ComplexType: %s", ct.Name)
+}
+func (st *SimpleType) ToString() string {
+	return fmt.Sprintf("SimpleType: %s", st.Name)
+}
+func (r *Restriction) ToString() string {
+	return fmt.Sprintf("Base: %s", r.Base)
 }
 func (s *Sequence) ToString() string {
 	return fmt.Sprintf("Sequence: %s %s", s.Name, occurs(s.MinOccurs, s.MaxOccurs))

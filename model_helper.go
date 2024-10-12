@@ -54,6 +54,36 @@ func (ct *ComplexType) applyFunction(f func(xe XsdElement) bool) (x bool) {
 	return
 }
 
+// applyFunction applies a function SimpleType and children as long as function returns true
+func (st *SimpleType) applyFunction(f func(xe XsdElement) bool) (x bool) {
+	if st == nil {
+		return true
+	}
+	if x = f(st); !x {
+		return
+	}
+	if x = st.Restriction.applyFunction(f); !x {
+		return
+	}
+	return
+}
+
+
+// applyFunction applies a function Restriction and children as long as function returns true
+func (r *Restriction) applyFunction(f func(xe XsdElement) bool) (x bool) {
+	if r == nil {
+		return true
+	}
+	if x = f(r); !x {
+		return
+	}
+	//if x = r.Restriction.applyFunction(f); !x {
+	//	return
+	//}
+	return
+}
+
+
 func (s *Sequence) applyFunction(f func(xe XsdElement) bool) (x bool) {
 	if s == nil {
 		return true
@@ -80,6 +110,9 @@ func (e *Element) applyFunction(f func(xe XsdElement) bool) (x bool) {
 		return
 	}
 	if x = e.ComplexType.applyFunction(f); !x {
+		return
+	}
+	if x = e.SimpleType.applyFunction(f); !x {
 		return
 	}
 	if x = e.Annotation.applyFunction(f); !x {
