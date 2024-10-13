@@ -23,17 +23,21 @@ type MessageItem struct {
 	MandatoryOptional string   `json:"mandatoryOptional,omitempty"` // M=Mandatory,O=Optional, blank=don't know
 	MinOccurs         string   `json:"minOccurs,omitempty"`
 	MaxOccurs         string   `json:"maxOccurs,omitempty"`
+	MinLength         int      `json:"minLength,omitempty"`
+	MaxLength         int      `json:"maxLength,omitempty"`
 	Description       string   `json:"description,omitempty"`
 	Values            []string `json:"values,omitempty"`
+	Pattern           string   `json:"pattern"`
 	MinInclusive      string   `json:"minInclusive,omitempty"`
 	MaxInclusive      string   `json:"maxInclusive,omitempty"`
 }
 
 type tf struct {
-	t            string // type
-	f            string // format
-	minInclusive string
-	maxInclusive string
+	t            string   // type
+	f            string   // format
+	minInclusive string   // Min value including this value
+	maxInclusive string   // Max value including this value
+	values       []string // Example values
 }
 
 var xsdTransMap map[string]tf
@@ -231,6 +235,18 @@ func (mi *MessageItem) setTypeOrMessage(t string, messageMap map[string]*Message
 			if typeFmt.maxInclusive > "" {
 				mi.MaxInclusive = typeFmt.maxInclusive
 			}
+			for _, v := range typeFmt.values {
+				found := false
+				for _, ev := range mi.Values {
+					if v == ev {
+						found = true
+						break
+					}
+				}
+				if !found {
+					mi.Values = append(mi.Values, v)
+				}
+			}
 		} else {
 			// Is this a Package:Message field
 			if pkgMsg := strings.Split(t, ":"); len(pkgMsg) > 1 {
@@ -287,13 +303,12 @@ func buildXsdTransMap(formatStandard string) {
 			"xs:decimal":          {t: "number"},
 			"xs:double":           {t: "number"},
 			"xs:boolean":          {t: "boolean"},
-			"xs:date":             {t: "string", f: "2018-11-13"},                //New in draft 7 Date
-			"xs:datetime":         {t: "string", f: "2018-11-13T20:20:39+00:00"}, // Date and time together
-			"xs:time":             {t: "string", f: "20:20:39+00:00"},            // New in draft 7 Time0
-			"duration":            {t: "string"},                                 //New in draft 2019-09 A duration as defined by the ISO 8601 ABNF for "duration". For example, P3D expresses a duration of 3 days
+			"xs:date":             {t: "date", f: "RFC 3339", values: []string{"2018-11-13"}},                     //New in draft 7 Date
+			"xs:datetime":         {t: "date-time", f: "RFC 3339", values: []string{"2018-11-13T20:20:39+00:00"}}, // Date and time together
+			"xs:time":             {t: "time", f: "RFC 3339", values: []string{"20:20:39+00:00"}},                 // New in draft 7 Time0
+			"duration":            {t: "duration", f: "ISO 8601 ABNF", values: []string{"P3D"}},                   //New in draft 2019-09 A duration as defined by the ISO 8601 ABNF for "duration". For example, P3D expresses a duration of 3 days
 		}
 	default:
 		xsdTransMap = map[string]tf{} // No translation
 	}
-
 }
