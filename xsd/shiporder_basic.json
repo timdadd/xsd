@@ -18,7 +18,7 @@
       },
       {
         "name": "orderid",
-        "type": "string",
+        "type": "orderid",
         "mandatoryOptional": "M"
       }
     ],
@@ -60,20 +60,13 @@
       },
       {
         "name": "quantity",
-        "type": "xs.positiveInteger"
+        "type": "int64",
+        "minInclusive": "0"
       },
       {
         "name": "price",
-        "type": "xs.decimal"
+        "type": "float"
       }
     ]
-  },
-  {
-    "package": "xs",
-    "name": "positiveInteger"
-  },
-  {
-    "package": "xs",
-    "name": "decimal"
   }
 ]

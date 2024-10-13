@@ -74,7 +74,8 @@
     "messageItems": [
       {
         "name": "quantity",
-        "type": "xs.positiveInteger"
+        "type": "int64",
+        "minInclusive": "0"
       }
     ],
     "isNamed": true
@@ -84,7 +85,7 @@
     "messageItems": [
       {
         "name": "price",
-        "type": "xs.decimal"
+        "type": "float"
       }
     ],
     "isNamed": true
@@ -159,13 +160,5 @@
       }
     ],
     "isNamed": true
-  },
-  {
-    "package": "xs",
-    "name": "positiveInteger"
-  },
-  {
-    "package": "xs",
-    "name": "decimal"
   }
 ]

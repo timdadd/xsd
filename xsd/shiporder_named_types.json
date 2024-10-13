@@ -64,7 +64,7 @@
       },
       {
         "name": "orderid",
-        "type": "orderidtype",
+        "type": "orderid",
         "mandatoryOptional": "M"
       }
     ],
@@ -85,7 +85,8 @@
     "messageItems": [
       {
         "name": "inttype",
-        "type": "xs.positiveInteger"
+        "type": "int64",
+        "minInclusive": "0"
       }
     ],
     "isNamed": true
@@ -95,7 +96,7 @@
     "messageItems": [
       {
         "name": "dectype",
-        "type": "xs.decimal"
+        "type": "float"
       }
     ],
     "isNamed": true
@@ -106,7 +107,7 @@
       {
         "name": "orderidtype",
         "type": "string",
-        "pattern": "[0-9]{6}"
+        "format": "[0-9]{6}"
       }
     ],
     "isNamed": true
@@ -120,13 +121,5 @@
       }
     ],
     "isNamed": true
-  },
-  {
-    "package": "xs",
-    "name": "positiveInteger"
-  },
-  {
-    "package": "xs",
-    "name": "decimal"
   }
 ]
