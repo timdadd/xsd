@@ -1,0 +1,171 @@
+[
+  {
+    "name": "orderperson",
+    "messageItems": [
+      {
+        "name": "orderperson",
+        "type": "string"
+      }
+    ],
+    "isNamed": true
+  },
+  {
+    "name": "name",
+    "messageItems": [
+      {
+        "name": "name",
+        "type": "string"
+      }
+    ],
+    "isNamed": true
+  },
+  {
+    "name": "address",
+    "messageItems": [
+      {
+        "name": "address",
+        "type": "string"
+      }
+    ],
+    "isNamed": true
+  },
+  {
+    "name": "city",
+    "messageItems": [
+      {
+        "name": "city",
+        "type": "string"
+      }
+    ],
+    "isNamed": true
+  },
+  {
+    "name": "country",
+    "messageItems": [
+      {
+        "name": "country",
+        "type": "string"
+      }
+    ],
+    "isNamed": true
+  },
+  {
+    "name": "title",
+    "messageItems": [
+      {
+        "name": "title",
+        "type": "string"
+      }
+    ],
+    "isNamed": true
+  },
+  {
+    "name": "note",
+    "messageItems": [
+      {
+        "name": "note",
+        "type": "string"
+      }
+    ],
+    "isNamed": true
+  },
+  {
+    "name": "quantity",
+    "messageItems": [
+      {
+        "name": "quantity",
+        "type": "xs.positiveInteger"
+      }
+    ],
+    "isNamed": true
+  },
+  {
+    "name": "price",
+    "messageItems": [
+      {
+        "name": "price",
+        "type": "xs.decimal"
+      }
+    ],
+    "isNamed": true
+  },
+  {
+    "name": "shipto",
+    "messageItems": [
+      {
+        "name": "name",
+        "type": "name"
+      },
+      {
+        "name": "address",
+        "type": "address"
+      },
+      {
+        "name": "city",
+        "type": "city"
+      },
+      {
+        "name": "country",
+        "type": "country"
+      }
+    ],
+    "isNamed": true
+  },
+  {
+    "name": "item",
+    "messageItems": [
+      {
+        "name": "title",
+        "type": "title"
+      },
+      {
+        "name": "note",
+        "type": "note",
+        "mandatoryOptional": "O",
+        "minOccurs": "0"
+      },
+      {
+        "name": "quantity",
+        "type": "quantity"
+      },
+      {
+        "name": "price",
+        "type": "price"
+      }
+    ],
+    "isNamed": true
+  },
+  {
+    "name": "shiporder",
+    "messageItems": [
+      {
+        "name": "orderperson",
+        "type": "orderperson"
+      },
+      {
+        "name": "shipto",
+        "type": "shipto"
+      },
+      {
+        "name": "item",
+        "type": "item",
+        "repeated": true,
+        "maxOccurs": "unbounded"
+      },
+      {
+        "name": "orderid",
+        "type": "orderid",
+        "mandatoryOptional": "M"
+      }
+    ],
+    "isNamed": true
+  },
+  {
+    "package": "xs",
+    "name": "positiveInteger"
+  },
+  {
+    "package": "xs",
+    "name": "decimal"
+  }
+]

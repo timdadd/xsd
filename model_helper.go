@@ -13,167 +13,242 @@ func NewXSD(xsdXML []byte) (xsd *XSD, err error) {
 }
 
 // ApplyFunction applies a function to the XSD and all children as long as function returns true
-func (xsd *XSD) ApplyFunction(f func(xe XsdElement) bool) (x bool) {
+func (xsd *XSD) ApplyFunction(f func(XsdElement) error) (err error) {
 	if xsd == nil {
 		return
 	}
-	if x = f(xsd); !x {
+	if err = f(xsd); err != nil {
 		return
 	}
-	//if x = f(xsd.XMLName); !x {
+	//if err = f(xsd.XMLName); err != nil {
 	//	return
 	//}
-	if x = f(xsd.Import); !x {
+	if err = xsd.Import.applyFunction(f); err != nil {
 		return
 	}
-	for _, complexType := range xsd.ComplexTypes {
-		if x = complexType.applyFunction(f); !x {
+	for _, ct := range xsd.ComplexTypes {
+		if err = ct.applyFunction(f); err != nil {
+			return
+		}
+	}
+	for _, st := range xsd.SimpleTypes {
+		if err = st.applyFunction(f); err != nil {
+			return
+		}
+	}
+	for _, e := range xsd.Elements {
+		if err = e.applyFunction(f); err != nil {
 			return
 		}
 	}
 	return
 }
 
+func (i *Import) applyFunction(f func(XsdElement) error) (err error) {
+	if i == nil {
+		return nil
+	}
+	return f(i)
+}
+
 // applyFunction applies a function ComplexType and children as long as function returns true
-func (ct *ComplexType) applyFunction(f func(xe XsdElement) bool) (x bool) {
+func (ct *ComplexType) applyFunction(f func(XsdElement) error) (err error) {
 	if ct == nil {
-		return true
+		return nil
 	}
-	if x = f(ct); !x {
+	if err = f(ct); err != nil {
 		return
 	}
-	if x = ct.Sequence.applyFunction(f); !x {
+	if err = ct.Sequence.applyFunction(f); err != nil {
 		return
 	}
-	if x = ct.ComplexContent.applyFunction(f); !x {
+	if err = ct.ComplexContent.applyFunction(f); err != nil {
 		return
 	}
-	if x = ct.Choice.applyFunction(f); !x {
+	if err = ct.SimpleContent.applyFunction(f); err != nil {
+		return
+	}
+	for _, a := range ct.Attributes {
+		if err = a.applyFunction(f); err != nil {
+			return
+		}
+	}
+	if err = ct.Choice.applyFunction(f); err != nil {
 		return
 	}
 	return
 }
 
 // applyFunction applies a function SimpleType and children as long as function returns true
-func (st *SimpleType) applyFunction(f func(xe XsdElement) bool) (x bool) {
+func (st *SimpleType) applyFunction(f func(XsdElement) error) (err error) {
 	if st == nil {
-		return true
+		return nil
 	}
-	if x = f(st); !x {
+	if err = f(st); err != nil {
 		return
 	}
-	if x = st.Restriction.applyFunction(f); !x {
+	if err = st.Restriction.applyFunction(f); err != nil {
 		return
 	}
 	return
 }
-
 
 // applyFunction applies a function Restriction and children as long as function returns true
-func (r *Restriction) applyFunction(f func(xe XsdElement) bool) (x bool) {
+func (r *Restriction) applyFunction(f func(XsdElement) error) (err error) {
 	if r == nil {
-		return true
+		return nil
 	}
-	if x = f(r); !x {
+	if err = f(r); err != nil {
 		return
 	}
-	//if x = r.Restriction.applyFunction(f); !x {
-	//	return
-	//}
+	for _, e := range r.Enumerations {
+		if err = e.applyFunction(f); err != nil {
+			return
+		}
+	}
 	return
 }
 
-
-func (s *Sequence) applyFunction(f func(xe XsdElement) bool) (x bool) {
-	if s == nil {
-		return true
+// applyFunction applies a function Enumeration and children as long as function returns true
+func (e *Enumeration) applyFunction(f func(XsdElement) error) (err error) {
+	if e == nil {
+		return nil
 	}
-	if x = f(s); !x {
+	if err = f(e); err != nil {
+		return
+	}
+	return
+}
+
+func (s *Sequence) applyFunction(f func(XsdElement) error) (err error) {
+	if s == nil {
+		return nil
+	}
+	if err = f(s); err != nil {
 		return
 	}
 	for _, e := range s.Elements {
-		if x = e.applyFunction(f); !x {
+		if err = e.applyFunction(f); err != nil {
 			return
 		}
 	}
-	if x = s.Choice.applyFunction(f); !x {
+	if err = s.Choice.applyFunction(f); err != nil {
 		return
 	}
 	return
 }
 
-func (e *Element) applyFunction(f func(xe XsdElement) bool) (x bool) {
+func (e *Element) applyFunction(f func(XsdElement) error) (err error) {
 	if e == nil {
-		return true
+		return nil
 	}
-	if x = f(e); !x {
+	if err = f(e); err != nil {
 		return
 	}
-	if x = e.ComplexType.applyFunction(f); !x {
+	if err = e.ComplexType.applyFunction(f); err != nil {
 		return
 	}
-	if x = e.SimpleType.applyFunction(f); !x {
+	if err = e.SimpleType.applyFunction(f); err != nil {
 		return
 	}
-	if x = e.Annotation.applyFunction(f); !x {
+	if err = e.Annotation.applyFunction(f); err != nil {
 		return
 	}
 	return
 }
 
-func (cc *ComplexContent) applyFunction(f func(xe XsdElement) bool) (x bool) {
+func (cc *ComplexContent) applyFunction(f func(XsdElement) error) (err error) {
 	if cc == nil {
-		return true
+		return nil
 	}
-	if x = f(cc); !x {
+	if err = f(cc); err != nil {
 		return
 	}
-	x = cc.Extension.applyFunction(f)
+	err = cc.Extension.applyFunction(f)
 	return
 }
 
-func (ex *Extension) applyFunction(f func(xe XsdElement) bool) (x bool) {
+func (sc *SimpleContent) applyFunction(f func(XsdElement) error) (err error) {
+	if sc == nil {
+		return nil
+	}
+	if err = f(sc); err != nil {
+		return
+	}
+	err = sc.Extension.applyFunction(f)
+	return
+}
+
+func (ex *Extension) applyFunction(f func(XsdElement) error) (err error) {
 	if ex == nil {
-		return true
+		return nil
 	}
-	if x = f(ex); !x {
+	if err = f(ex); err != nil {
 		return
 	}
-	x = ex.Sequence.applyFunction(f)
-	return
-}
-
-func (ch *Choice) applyFunction(f func(xe XsdElement) bool) (x bool) {
-	if ch == nil {
-		return true
-	}
-	if x = f(ch); !x {
+	if err = ex.Sequence.applyFunction(f); err != nil {
 		return
 	}
-	x = ch.Sequence.applyFunction(f)
-	for _, e := range ch.Elements {
-		if x = e.applyFunction(f); !x {
+	for _, a := range ex.Attributes {
+		if err = a.applyFunction(f); err != nil {
 			return
 		}
 	}
 	return
 }
 
-func (a *Annotation) applyFunction(f func(xe XsdElement) bool) (x bool) {
+func (a *Attribute) applyFunction(f func(XsdElement) error) (err error) {
 	if a == nil {
-		return true
+		return nil
 	}
-	if x = f(a); !x {
+	if err = f(a); err != nil {
+		return
+	}
+	if err = a.ComplexType.applyFunction(f); err != nil {
+		return
+	}
+	if err = a.SimpleType.applyFunction(f); err != nil {
+		return
+	}
+	if err = a.Annotation.applyFunction(f); err != nil {
+		return
+	}
+	return
+}
+
+func (ch *Choice) applyFunction(f func(XsdElement) error) (err error) {
+	if ch == nil {
+		return nil
+	}
+	if err = f(ch); err != nil {
+		return
+	}
+	if err = ch.Sequence.applyFunction(f); err != nil {
+		return
+	}
+	for _, e := range ch.Elements {
+		if err = e.applyFunction(f); err != nil {
+			return
+		}
+	}
+	return
+}
+
+func (a *Annotation) applyFunction(f func(XsdElement) error) (err error) {
+	if a == nil {
+		return nil
+	}
+	if err = f(a); err != nil {
 		return
 	}
 	return
 }
 
 func (xsd *XSD) ItemsString() (sSlice []string) {
-	fDisplay := func(xe XsdElement) bool {
+	fDisplay := func(xe XsdElement) error {
 		sSlice = append(sSlice, xe.ToString())
-		return true
+		return nil
 	}
-	xsd.ApplyFunction(fDisplay)
+	_ = xsd.ApplyFunction(fDisplay)
 	return
 }

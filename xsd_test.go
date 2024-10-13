@@ -1,9 +1,11 @@
 package xsd_test
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"github.com/stretchr/testify/assert"
 	"os"
+	"path"
 	"strings"
 	"testing"
 	"xsd"
@@ -15,14 +17,16 @@ func TestXML(t *testing.T) {
 	dir := "./xsd"
 	items, _ := os.ReadDir(dir)
 	for _, item := range items {
-		if item.IsDir() {
+		ext := path.Ext(item.Name())
+		if item.IsDir() || ext == ".json" {
 			continue
 		}
-		// Only test with the test XSD
-		//if !strings.HasPrefix(item.Name(), "test.xml") {
+		// Uncomment to limit what gets tested
+		//if !strings.HasPrefix(item.Name(), "test") {
 		//	continue
 		//}
-		t.Logf("Found file %s", item.Name())
+		jsonFile := path.Join(dir, strings.ReplaceAll(item.Name(), ext, ".json"))
+		t.Logf("XSD file %s, json file:%s", item.Name(), jsonFile)
 		// Read the file
 		var xsdXML []byte
 		var err error
@@ -51,29 +55,112 @@ func TestXML(t *testing.T) {
 		// Now see if they are the same
 		assert.True(t, compareDefinitions(t, origXSD, newXSD), "Something changed to marshal / unmarshal")
 		//t.Logf("%s", origXSD.ToString())
-		s := newXSD.ItemsString()
-		t.Logf("%s", strings.Join(s, "\n"))
-		messages := origXSD.Protobuf()
+
+		// Load the expected result
+		var expect []*xsd.Message
+		var expectByte []byte
+		if expectByte, err = os.ReadFile(jsonFile); err != nil {
+			if !os.IsNotExist(err) {
+				t.Fatalf("could not read the XML file, got %v", err)
+			}
+		} else {
+			if err = json.Unmarshal(expectByte, &expect); err != nil {
+				t.Fatalf("could not unmarshal json into message map, got %v", err)
+			}
+		}
+		noJson := len(expect) == 0
+		//noJson = true // Description this out if not checking manually
+		// Uncomment to see each element being visited and the order of the visit
+		//s := newXSD.ItemsString()
+		//t.Logf("%s", strings.Join(s, "\n"))
+		//}
+
+		var messages []*xsd.Message
+		messages, err = origXSD.Messages()
+		if !assert.NoError(t, err, "converting xsd to messages") {
+			continue
+		}
 		pkg := ""
-		for _, msg := range messages {
+		if noJson {
+			t.Logf("%d messages", len(messages))
+		} else {
+			if !assert.Len(t, messages, len(expect)) {
+				continue
+			}
+		}
+
+		for m, msg := range messages {
 			if pkg != msg.Package {
-				t.Logf("Package: %s", msg.Package)
+				if noJson {
+					t.Logf("Package: %s", msg.Package)
+				}
 				pkg = msg.Package
 			}
-			t.Logf("message %s {", msg.Name)
-			for i, mi := range msg.MessageItems {
-				repeated := ""
-				if mi.Repeated {
-					repeated = " repeated"
+			var expectMsg *xsd.Message
+			if noJson {
+				t.Logf("message %s {", msg.Name)
+			} else {
+				expectMsg = expect[m]
+				if !assert.Equal(t, expectMsg.Name, msg.Name) {
+					continue
 				}
-				comment := mi.Comment
-				if comment > "" {
-					comment = " // " + comment
-				}
-				t.Logf("    %s %s %s = %d%s", repeated, mi.TypeOrMessage, mi.Name, i+1, comment)
 			}
-			t.Logf("} // End of %s", msg.Name)
+			for i, mi := range msg.MessageItems {
+				if noJson {
+					var attributes []string
+					if mi.Repeated {
+						attributes = append(attributes, "repeated")
+					}
+					switch mi.MandatoryOptional {
+					case "M":
+						attributes = append(attributes, "mandatory")
+					case "O":
+						attributes = append(attributes, "optional")
+					}
+					attributes = append(attributes, mi.Type)
+					var comments []string
+					if mi.Description != "" {
+						comments = append(comments, mi.Description)
+					}
+					if len(mi.Values) > 0 {
+						comments = append(comments, "Values:"+strings.Join(mi.Values, ", "))
+					}
+					if mi.Pattern > "" {
+						comments = append(comments, "Pattern:"+mi.Pattern)
+					}
+					if mi.MinInclusive > "" {
+						comments = append(comments, "MinInclusive:"+mi.MinInclusive)
+					}
+					if mi.MaxInclusive > "" {
+						comments = append(comments, "MaxInclusive:"+mi.MaxInclusive)
+					}
+					var comment string
+					if len(comments) > 0 {
+						comment = " // " + strings.Join(comments, ",")
+					}
+
+					t.Logf("    %s %s = %d%s", strings.Join(attributes, " "), mi.Name, i+1, comment)
+				} else {
+					if !assert.Equal(t, mi, expectMsg.MessageItems[i]) {
+						continue
+					}
+				}
+			}
+			if noJson {
+				t.Logf("} // End of %s", msg.Name)
+			}
 		}
+		// If there is noJson then write a file
+		if noJson {
+			if expectByte, err = json.MarshalIndent(messages, "", "  "); err != nil {
+				t.Logf("unable to marshall result, %v", err)
+			} else {
+				if err = os.WriteFile(jsonFile, expectByte, 0644); err != nil {
+					t.Logf("unable to save result, %v", err)
+				}
+			}
+		}
+
 		//origXSD.Display()
 	}
 }
@@ -85,7 +172,7 @@ func TestXML(t *testing.T) {
 //			{Id: "R_CD_CAM_BPD2021_DR_ZpjiKw", Type: "business", Code: "", Name: "Service Identifier", Description: "It is expected that the MSISDN field currently used in SNOW will accept any service identifier which can be an MSISDN or PSTN for Mobile or fixed service as defined in ITU E.164 or a service identifier for none-voice based services such as leased lines, FTTO, FTTH etc."},
 //			{Id: "R_CD_CAM_CAS_D3AP_ZlQztg", Type: "customerAttr", Code: "A-4-8", Name: "Billing :  Change Bill Bycle", Description: "To_BE confirmed the LOV of customerBillCycleId"},
 //			{Id: "R_CD_CAM_BPD2021_DR_Zq-kPw", Type: "business", Code: "A-4-9", Name: "Subscriber : preferredLanguage", Description: "To_BE confirmed the LOV of preferredLanguage"},
-//			{Id: "R_CD_NS_POS_MSR_AC_ZkCGeg", Type: "customerAttr", Code: "A-3-4", Name: "Other - Optional & Mandatory by Condition", Description: "Email, Contact Number, Location, etc"},
+//			{Id: "R_CD_NS_POS_MSR_AC_ZkCGeg", Type: "customerAttr", Code: "A-3-4", Name: "Other - Optional & Required by Condition", Description: "Email, Contact Number, Location, etc"},
 //			{Id: "R_CD_CAM_CAS_D3AP_ZlQzsA", Type: "customerAttr", Code: "A-4-2", Name: "Customer : Contact Info", Description: "Primary Contact ,Email Address ,Alternative Contact Number ,Office Number ,Home Number ,Preferred Contact Method ,Preferred Contact Time, Preferred Language"},
 //			{Id: "R_CD_CAM_CAS_ZlctdA", Type: "customerAttr", Code: "A-4-5", Name: "Account : Billing Contact Info", Description: "Salution,Name,Address ,Email Address"},
 //			{Id: "R_CD_CAM_CAS_D3AP_ZlQztQ", Type: "customerAttr", Code: "A-4-7", Name: "Billing :  Bill Medium : Paper,Email , e-Billing , CD,EMS_Bill, SMS", Description: "To_BE confirmed the LOV of Bill Media"},

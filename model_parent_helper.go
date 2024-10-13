@@ -6,152 +6,295 @@ import (
 )
 
 // ApplyFunctionP applies a function to the XSD and all children as long as function returns true
-func (xsd *XSD) ApplyFunctionP(f func(xe XsdElement, p interface{}) (bool, interface{})) (x bool, c interface{}) {
+func (xsd *XSD) ApplyFunctionP(f func(XsdElement, interface{}) (interface{}, error)) (child interface{}, err error) {
 	if xsd == nil {
 		return
 	}
-	if x, c = f(xsd, nil); !x {
+	if child, err = f(xsd, nil); err != nil {
 		return
 	}
-	//if x, _ = f(xsd.XMLName, c); !x {
-	//	return
-	//}
-	if x, _ = f(xsd.Import, c); !x {
+	if _, err = xsd.Import.applyFunctionP(f, child); err != nil {
 		return
 	}
-	for _, complexType := range xsd.ComplexTypes {
-		if x, _ = complexType.applyFunctionP(f, c); !x {
+	for _, ct := range xsd.ComplexTypes {
+		if _, err = ct.applyFunctionP(f, child); err != nil {
 			return
 		}
 	}
+	for _, st := range xsd.SimpleTypes {
+		if _, err = st.applyFunctionP(f, child); err != nil {
+			return
+		}
+	}
+	for _, elm := range xsd.Elements {
+		if _, err = elm.applyFunctionP(f, child); err != nil {
+			return
+		}
+	}
+
 	return
+}
+
+// applyFunctionP applies a function to Import as long as function returns true
+func (i *Import) applyFunctionP(f func(XsdElement, interface{}) (interface{}, error), parent interface{}) (child interface{}, err error) {
+	if i == nil {
+		return true, nil
+	}
+	return f(i, parent)
 }
 
 // applyFunctionP applies a function to ComplexType and children as long as function returns true
-func (ct *ComplexType) applyFunctionP(f func(xe XsdElement, p interface{}) (bool, interface{}), p interface{}) (x bool, c interface{}) {
+func (ct *ComplexType) applyFunctionP(f func(XsdElement, interface{}) (interface{}, error), parent interface{}) (child interface{}, err error) {
 	if ct == nil {
 		return true, nil
 	}
-	if x, c = f(ct, p); !x {
+	if child, err = f(ct, parent); err != nil {
 		return
 	}
-	if x, _ = ct.Sequence.applyFunctionP(f, c); !x {
+	if _, err = ct.Sequence.applyFunctionP(f, child); err != nil {
 		return
 	}
-	if x, _ = ct.ComplexContent.applyFunctionP(f, c); !x {
+	if _, err = ct.ComplexContent.applyFunctionP(f, child); err != nil {
 		return
 	}
-	if x, _ = ct.Choice.applyFunctionP(f, c); !x {
+	if _, err = ct.SimpleContent.applyFunctionP(f, child); err != nil {
+		return
+	}
+	for _, a := range ct.Attributes {
+		if _, err = a.applyFunctionP(f, child); err != nil {
+			return
+		}
+	}
+	if _, err = ct.Choice.applyFunctionP(f, child); err != nil {
 		return
 	}
 	return
 }
 
-// applyFunctionP applies a function to Sequence and children as long as function returns true
-func (s *Sequence) applyFunctionP(f func(xe XsdElement, p interface{}) (bool, interface{}), p interface{}) (x bool, c interface{}) {
-	if s == nil {
+// applyFunctionP applies a function to SimpleType and children as long as function returns true
+func (st *SimpleType) applyFunctionP(f func(XsdElement, interface{}) (interface{}, error), parent interface{}) (child interface{}, err error) {
+	if st == nil {
 		return true, nil
 	}
-	if x, c = f(s, p); !x {
+	if child, err = f(st, parent); err != nil {
 		return
 	}
-	for _, e := range s.Elements {
-		if x, _ = e.applyFunctionP(f, c); !x {
+	if _, err = st.Restriction.applyFunctionP(f, child); err != nil {
+		return
+	}
+	return
+}
+
+// applyFunctionP applies a function Restriction and children as long as function returns true
+func (r *Restriction) applyFunctionP(f func(XsdElement, interface{}) (interface{}, error), parent interface{}) (child interface{}, err error) {
+	if r == nil {
+		return true, nil
+	}
+	if child, err = f(r, parent); err != nil {
+		return
+	}
+	for _, e := range r.Enumerations {
+		if _, err = e.applyFunctionP(f, child); err != nil {
 			return
 		}
 	}
-	if x, _ = s.Choice.applyFunctionP(f, c); !x {
+	if _, err = r.Pattern.applyFunctionP(f, child); err != nil {
+		return
+	}
+	if _, err = r.MinInclusive.applyFunctionP(f, child); err != nil {
+		return
+	}
+	if _, err = r.MaxInclusive.applyFunctionP(f, child); err != nil {
+		return
+	}
+	return
+}
+
+// applyFunctionP applies a function Pattern and children as long as function returns true
+func (p *Pattern) applyFunctionP(f func(XsdElement, interface{}) (interface{}, error), parent interface{}) (child interface{}, err error) {
+	if p == nil {
+		return true, nil
+	}
+	if child, err = f(p, parent); err != nil {
+		return
+	}
+	return
+}
+
+// applyFunctionP applies a function MinInclusive and children as long as function returns true
+func (mi *MinInclusive) applyFunctionP(f func(XsdElement, interface{}) (interface{}, error), parent interface{}) (child interface{}, err error) {
+	if mi == nil {
+		return true, nil
+	}
+	if child, err = f(mi, parent); err != nil {
+		return
+	}
+	return
+}
+
+// applyFunctionP applies a function MaxInclusive and children as long as function returns true
+func (mi *MaxInclusive) applyFunctionP(f func(XsdElement, interface{}) (interface{}, error), parent interface{}) (child interface{}, err error) {
+	if mi == nil {
+		return true, nil
+	}
+	if child, err = f(mi, parent); err != nil {
+		return
+	}
+	return
+}
+
+// applyFunctionP applies a function Enumeration and children as long as function returns true
+func (e *Enumeration) applyFunctionP(f func(XsdElement, interface{}) (interface{}, error), parent interface{}) (child interface{}, err error) {
+	if e == nil {
+		return true, nil
+	}
+	return f(e, parent)
+}
+
+// applyFunctionP applies a function to Sequence and children as long as function returns true
+func (s *Sequence) applyFunctionP(f func(XsdElement, interface{}) (interface{}, error), parent interface{}) (child interface{}, err error) {
+	if s == nil {
+		return true, nil
+	}
+	if child, err = f(s, parent); err != nil {
+		return
+	}
+	for _, elm := range s.Elements {
+		if _, err = elm.applyFunctionP(f, child); err != nil {
+			return
+		}
+	}
+	if _, err = s.Choice.applyFunctionP(f, child); err != nil {
 		return
 	}
 	return
 }
 
 // applyFunctionP applies a function to Choice and children as long as function returns true
-func (ch *Choice) applyFunctionP(f func(xe XsdElement, p interface{}) (bool, interface{}), p interface{}) (x bool, c interface{}) {
-	if ch == nil {
+func (c *Choice) applyFunctionP(f func(XsdElement, interface{}) (interface{}, error), parent interface{}) (child interface{}, err error) {
+	if c == nil {
 		return true, nil
 	}
-	if x, c = f(ch, p); !x {
+	if child, err = f(c, parent); err != nil {
 		return
 	}
-	for _, e := range ch.Elements {
-		if x, _ = e.applyFunctionP(f, c); !x {
+	for _, elm := range c.Elements {
+		if _, err = elm.applyFunctionP(f, child); err != nil {
 			return
 		}
 	}
-	if x, _ = ch.Sequence.applyFunctionP(f, c); !x {
+	if _, err = c.Sequence.applyFunctionP(f, child); err != nil {
 		return
 	}
 	return
 }
 
 // applyFunctionP applies a function to Element and children as long as function returns true
-func (e *Element) applyFunctionP(f func(xe XsdElement, p interface{}) (bool, interface{}), p interface{}) (x bool, c interface{}) {
+func (e *Element) applyFunctionP(f func(XsdElement, interface{}) (interface{}, error), parent interface{}) (child interface{}, err error) {
 	if e == nil {
 		return true, nil
 	}
-	if x, c = f(e, p); !x {
+	if child, err = f(e, parent); err != nil {
 		return
 	}
-	if x, _ = e.ComplexType.applyFunctionP(f, c); !x {
+	if _, err = e.ComplexType.applyFunctionP(f, child); err != nil {
 		return
 	}
-	if x, _ = e.Annotation.applyFunctionP(f, c); !x {
+	if _, err = e.SimpleType.applyFunctionP(f, child); err != nil {
+		return
+	}
+	if _, err = e.Annotation.applyFunctionP(f, child); err != nil {
 		return
 	}
 	return
 }
 
 // applyFunctionP applies a function to ComplexContent and children as long as function returns true
-func (cc *ComplexContent) applyFunctionP(f func(xe XsdElement, p interface{}) (bool, interface{}), p interface{}) (x bool, c interface{}) {
+func (cc *ComplexContent) applyFunctionP(f func(XsdElement, interface{}) (interface{}, error), parent interface{}) (child interface{}, err error) {
 	if cc == nil {
 		return true, nil
 	}
-	if x, c = f(cc, p); !x {
+	if child, err = f(cc, parent); err != nil {
 		return
 	}
-	if x, _ = cc.Extension.applyFunctionP(f, c); !x {
+	if _, err = cc.Extension.applyFunctionP(f, child); err != nil {
+		return
+	}
+	return
+}
+
+// applyFunctionP applies a function to SimpleContent and children as long as function returns true
+func (sc *SimpleContent) applyFunctionP(f func(XsdElement, interface{}) (interface{}, error), parent interface{}) (child interface{}, err error) {
+	if sc == nil {
+		return true, nil
+	}
+	if child, err = f(sc, parent); err != nil {
+		return
+	}
+	if _, err = sc.Extension.applyFunctionP(f, child); err != nil {
 		return
 	}
 	return
 }
 
 // applyFunctionP applies a function to Extension and children as long as function returns true
-func (ex *Extension) applyFunctionP(f func(xe XsdElement, p interface{}) (bool, interface{}), p interface{}) (x bool, c interface{}) {
+func (ex *Extension) applyFunctionP(f func(XsdElement, interface{}) (interface{}, error), parent interface{}) (child interface{}, err error) {
 	if ex == nil {
 		return true, nil
 	}
-	if x, c = f(ex, p); !x {
+	if child, err = f(ex, parent); err != nil {
 		return
 	}
-	if x, _ = ex.Sequence.applyFunctionP(f, c); !x {
+	if _, err = ex.Sequence.applyFunctionP(f, child); err != nil {
+		return
+	}
+	for _, a := range ex.Attributes {
+		if child, err = a.applyFunctionP(f, child); err != nil {
+			return
+		}
+	}
+	return
+}
+
+// applyFunctionP applies a function to Attribute as long as function returns true
+func (a *Attribute) applyFunctionP(f func(XsdElement, interface{}) (interface{}, error), parent interface{}) (child interface{}, err error) {
+	if a == nil {
+		return true, nil
+	}
+	if child, err = f(a, parent); err != nil {
+		return
+	}
+	if _, err = a.ComplexType.applyFunctionP(f, child); err != nil {
+		return
+	}
+	if _, err = a.SimpleType.applyFunctionP(f, child); err != nil {
+		return
+	}
+	if _, err = a.Annotation.applyFunctionP(f, child); err != nil {
 		return
 	}
 	return
 }
 
-// applyFunctionP applies a function to Extension and children as long as function returns true
-func (a *Annotation) applyFunctionP(f func(xe XsdElement, p interface{}) (bool, interface{}), p interface{}) (x bool, c interface{}) {
+// applyFunctionP applies a function to Annotation and children as long as function returns true
+func (a *Annotation) applyFunctionP(f func(XsdElement, interface{}) (interface{}, error), parent interface{}) (child interface{}, err error) {
 	if a == nil {
 		return true, nil
 	}
-	if x, c = f(a, p); !x {
-		return
-	}
-	return
+	return f(a, parent)
 }
 
 // ToStringP is a tree view with knowledge of parent
 func (xsd *XSD) ToStringP() string {
 	var sSlice []string
-	fDisplay := func(xe XsdElement, h interface{}) (bool, interface{}) {
+	fDisplay := func(xe XsdElement, h interface{}) (interface{}, error) {
 		var level int
 		if h != nil {
 			level = h.(int) + 1
 		}
 		sSlice = append(sSlice, strings.Repeat("  ", level)+fmt.Sprintf("%d) %s", level, xe.ToString()))
-		return true, level
+		return level, nil
 	}
-	xsd.ApplyFunctionP(fDisplay)
+	_, _ = xsd.ApplyFunctionP(fDisplay)
 	return strings.Join(sSlice, "\n")
 }

@@ -1,0 +1,79 @@
+[
+  {
+    "name": "shiporder",
+    "messageItems": [
+      {
+        "name": "orderperson",
+        "type": "string"
+      },
+      {
+        "name": "shipto",
+        "type": "shipto"
+      },
+      {
+        "name": "item",
+        "type": "item",
+        "repeated": true,
+        "maxOccurs": "unbounded"
+      },
+      {
+        "name": "orderid",
+        "type": "string",
+        "mandatoryOptional": "M"
+      }
+    ],
+    "isNamed": true
+  },
+  {
+    "name": "shipto",
+    "messageItems": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "address",
+        "type": "string"
+      },
+      {
+        "name": "city",
+        "type": "string"
+      },
+      {
+        "name": "country",
+        "type": "string"
+      }
+    ]
+  },
+  {
+    "name": "item",
+    "messageItems": [
+      {
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "name": "note",
+        "type": "string",
+        "mandatoryOptional": "O",
+        "minOccurs": "0"
+      },
+      {
+        "name": "quantity",
+        "type": "xs.positiveInteger"
+      },
+      {
+        "name": "price",
+        "type": "xs.decimal"
+      }
+    ]
+  },
+  {
+    "package": "xs",
+    "name": "positiveInteger"
+  },
+  {
+    "package": "xs",
+    "name": "decimal"
+  }
+]

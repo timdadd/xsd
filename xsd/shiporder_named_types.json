@@ -1,0 +1,132 @@
+[
+  {
+    "name": "shiptotype",
+    "messageItems": [
+      {
+        "name": "name",
+        "type": "stringtype"
+      },
+      {
+        "name": "address",
+        "type": "stringtype"
+      },
+      {
+        "name": "city",
+        "type": "stringtype"
+      },
+      {
+        "name": "country",
+        "type": "stringtype"
+      }
+    ],
+    "isNamed": true
+  },
+  {
+    "name": "itemtype",
+    "messageItems": [
+      {
+        "name": "title",
+        "type": "stringtype"
+      },
+      {
+        "name": "note",
+        "type": "stringtype",
+        "mandatoryOptional": "O",
+        "minOccurs": "0"
+      },
+      {
+        "name": "quantity",
+        "type": "inttype"
+      },
+      {
+        "name": "price",
+        "type": "dectype"
+      }
+    ],
+    "isNamed": true
+  },
+  {
+    "name": "shipordertype",
+    "messageItems": [
+      {
+        "name": "orderperson",
+        "type": "stringtype"
+      },
+      {
+        "name": "shipto",
+        "type": "shiptotype"
+      },
+      {
+        "name": "item",
+        "type": "itemtype",
+        "repeated": true,
+        "maxOccurs": "unbounded"
+      },
+      {
+        "name": "orderid",
+        "type": "orderidtype",
+        "mandatoryOptional": "M"
+      }
+    ],
+    "isNamed": true
+  },
+  {
+    "name": "stringtype",
+    "messageItems": [
+      {
+        "name": "stringtype",
+        "type": "string"
+      }
+    ],
+    "isNamed": true
+  },
+  {
+    "name": "inttype",
+    "messageItems": [
+      {
+        "name": "inttype",
+        "type": "xs.positiveInteger"
+      }
+    ],
+    "isNamed": true
+  },
+  {
+    "name": "dectype",
+    "messageItems": [
+      {
+        "name": "dectype",
+        "type": "xs.decimal"
+      }
+    ],
+    "isNamed": true
+  },
+  {
+    "name": "orderidtype",
+    "messageItems": [
+      {
+        "name": "orderidtype",
+        "type": "string",
+        "pattern": "[0-9]{6}"
+      }
+    ],
+    "isNamed": true
+  },
+  {
+    "name": "shiporder",
+    "messageItems": [
+      {
+        "name": "shiporder",
+        "type": "shipordertype"
+      }
+    ],
+    "isNamed": true
+  },
+  {
+    "package": "xs",
+    "name": "positiveInteger"
+  },
+  {
+    "package": "xs",
+    "name": "decimal"
+  }
+]
